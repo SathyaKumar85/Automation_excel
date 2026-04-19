@@ -18,7 +18,6 @@ def generate_file_map(folder_path, sheet_name, anchor_keyword, target_column):
     summary_list = []
     error_list = []
     
-    # --- STEP 1: LOAD EXISTING DATA TO PREVENT RE-PROCESSING ---
     existing_files = []
     old_summary_df = pd.DataFrame()
     old_error_df = pd.DataFrame()
@@ -33,11 +32,9 @@ def generate_file_map(folder_path, sheet_name, anchor_keyword, target_column):
         except Exception:
             print("Output file found but could not be read. Creating fresh report.")
 
-    # --- STEP 2: GET FILE LIST ---
     search_pattern = os.path.join(folder_path, "*.xl*")
     all_files = glob.glob(search_pattern)
     
-    # Filter to only new files
     file_list = [f for f in all_files if os.path.basename(f) not in existing_files]
 
     if not file_list:
@@ -46,7 +43,6 @@ def generate_file_map(folder_path, sheet_name, anchor_keyword, target_column):
 
     print(f"Processing {len(file_list)} new files...")
 
-    # --- STEP 3: THE MAIN LOOP ---
     for file_path in tqdm(file_list, desc="Batch Progress"):
         file_name = os.path.basename(file_path)
         
@@ -86,12 +82,9 @@ def generate_file_map(folder_path, sheet_name, anchor_keyword, target_column):
         except Exception as e:
             error_list.append({"File Name": file_name, "Error": str(e)})
 
-    # --- STEP 4: MERGE AND SAVE ---
-    # Convert new lists to DataFrames
     new_summary_df = pd.DataFrame(summary_list)
     new_error_df = pd.DataFrame(error_list)
 
-    # Combine with old data
     final_summary = pd.concat([old_summary_df, new_summary_df], ignore_index=True)
     final_error = pd.concat([old_error_df, new_error_df], ignore_index=True)
 
@@ -101,7 +94,5 @@ def generate_file_map(folder_path, sheet_name, anchor_keyword, target_column):
             final_error.to_excel(writer, sheet_name="Errors", index=False)
 
     print(f"\nBatch complete! Total files in report: {len(final_summary) + len(final_error)}")
-
-# --- SETTINGS ---
 FOLDER = r"Path"
 generate_file_map(FOLDER, "sheetname", "anchorword", "targetcolumn")
